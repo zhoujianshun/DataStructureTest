@@ -2,7 +2,6 @@ package app.tree;
 
 import java.util.Comparator;
 
-
 /**
  * BinarySearchTree
  */
@@ -18,14 +17,13 @@ public class BST<E> extends BinaryTree<E> {
         this.comparator = comparator;
     }
 
-   
-
     public void add(E element) {
         checkElementNotNull(element);
         if (this.root == null) {
-            Node<E> newNode = new Node<>(element, null);
+            Node<E> newNode = createNode(element, null);
             this.root = newNode;
             this.size++;
+            afterAdd(newNode);
             return;
         }
 
@@ -44,22 +42,30 @@ public class BST<E> extends BinaryTree<E> {
                 return;
             }
         }
-        Node<E> newNode = new Node<>(element, parent);
+        Node<E> newNode = createNode(element, parent);
         if (compareResult > 0) {
             parent.right = newNode;
         } else {
             parent.left = newNode;
         }
         this.size++;
+        afterAdd(newNode);
     }
 
     public void remove(E element) {
         remove(node(element));
     }
 
-    
     public boolean contains(E element) {
         return node(element) != null;
+    }
+
+    protected void afterAdd(Node<E> node) {
+
+    }
+
+    protected void afterRemove(Node<E> node) {
+
     }
 
     private void remove(Node<E> node) {
@@ -92,6 +98,7 @@ public class BST<E> extends BinaryTree<E> {
                 node.parent.right = child;
             }
         }
+        afterRemove(node);
     }
 
     private Node<E> node(E element) {
@@ -108,7 +115,6 @@ public class BST<E> extends BinaryTree<E> {
         }
         return null;
     }
-
 
     private void checkElementNotNull(E element) {
         if (element == null) {
