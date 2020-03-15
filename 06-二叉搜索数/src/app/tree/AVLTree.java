@@ -5,7 +5,7 @@ import java.util.Comparator;
 /**
  * AVLTree
  */
-public class AVLTree<E> extends BST<E> {
+public class AVLTree<E> extends BBST<E> {
 
     public AVLTree() {
         this(null);
@@ -31,7 +31,7 @@ public class AVLTree<E> extends BST<E> {
     }
 
     @Override
-    protected void afterRemove(Node<E> node) {
+    protected void afterRemove(Node<E> node, Node<E> replacement) {
         while ((node = node.parent) != null) {
             // node是否平衡
             if (isBalanced(node)) {
@@ -79,58 +79,10 @@ public class AVLTree<E> extends BST<E> {
         }
     }
 
-    private void rotateLeft(Node<E> node) {
-        Node<E> grand = node;
-        Node<E> parent = node.right;
-        Node<E> child = parent.left;
+    @Override
+    protected void afterRotate(Node<E> grand, Node<E> parent, Node<E> child) {
 
-        Node<E> gg = grand.parent;
-        if (grand.isLeftChild()) {
-            gg.left = parent;
-        } else if (grand.isRightChild()) {
-            gg.right = parent;
-        } else {
-            // 没有父节点
-            root = parent;
-        }
-        parent.parent = gg;
-
-        parent.left = grand;
-        grand.parent = parent;
-
-        grand.right = child;
-        if (child != null) {
-            child.parent = parent;
-        }
-
-        updateHeight(grand);
-        updateHeight(parent);
-    }
-
-    private void rotateRight(Node<E> node) {
-        Node<E> grand = node;
-        Node<E> parent = node.left;
-        Node<E> child = parent.right;
-
-        Node<E> gg = grand.parent;
-        if (grand.isLeftChild()) {
-            gg.left = parent;
-        } else if (grand.isRightChild()) {
-            gg.right = parent;
-        } else {
-            // 没有父节点
-            root = parent;
-        }
-        parent.parent = gg;
-
-        parent.right = grand;
-        grand.parent = parent;
-
-        grand.left = child;
-        if (child != null) {
-            child.parent = grand;
-        }
-
+        super.afterRotate(grand, parent, child);
         updateHeight(grand);
         updateHeight(parent);
     }

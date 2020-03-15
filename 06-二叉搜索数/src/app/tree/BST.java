@@ -64,7 +64,7 @@ public class BST<E> extends BinaryTree<E> {
 
     }
 
-    protected void afterRemove(Node<E> node) {
+    protected void afterRemove(Node<E> node, Node<E> replacement) {
 
     }
 
@@ -83,22 +83,39 @@ public class BST<E> extends BinaryTree<E> {
 
         }
 
-        Node<E> child = node.left != null ? node.left : node.right;
-
-        if (this.root == node) {
-            this.root = child;
-            child.parent = null;
-        } else {
-            if (child != null) {
-                child.parent = node.parent;
-            }
-            if (node.parent.left == node) {
-                node.parent.left = child;
+        // 删除node节点（node的度必为1或者0）
+        Node<E> replacement = node.left != null ? node.left : node.right;
+        if (replacement != null) {
+            // node的度为1
+            replacement.parent = node.parent;
+            if (node.parent == null) {
+                // node的度为1，且是根节点
+                root = replacement;
+            } else if (node == node.parent.left) {
+                node.parent.left = replacement;
             } else {
-                node.parent.right = child;
+                // node == node.parent.right
+                node.parent.right = replacement;
+            }
+            afterRemove(node, replacement);
+        } else {
+            if (node.parent == null) {
+                // 删除的是根节点
+                root = null;
+                afterRemove(node, null);
+            } else {
+                // node 是叶子节点，但是不是root节点
+                if (node.parent.left == node) {
+                    node.parent.left = null;
+                } else {
+                    // node.parent.right == node
+                    node.parent.right = null;
+                }
+
+                afterRemove(node, null);
             }
         }
-        afterRemove(node);
+
     }
 
     private Node<E> node(E element) {

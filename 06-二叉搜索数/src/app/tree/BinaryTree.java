@@ -463,6 +463,16 @@ public class BinaryTree<E> implements BinaryTreeInfo {
             return this.parent != null && this == this.parent.right;
         }
 
+        public Node<E> sibling() {
+            if (this.isLeftChild()) {
+                return this.parent.right;
+            } else if (this.isRightChild()) {
+                return this.parent.left;
+            } else {
+                return null;
+            }
+        }
+
     }
 
     @Override
@@ -487,6 +497,7 @@ public class BinaryTree<E> implements BinaryTreeInfo {
     public Object string(Object node) {
         return node.toString();
         // Node<E> p = ((Node<E>) node).parent;
-        // return "p(" + (p != null ? p.element : "null") + ")_" + ((Node<E>) node).element;
+        // return "p(" + (p != null ? p.element : "null") + ")_" + ((Node<E>)
+        // node).element;
     }
 }
