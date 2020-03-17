@@ -1,4 +1,4 @@
-package app;
+package app.list;
 
 
 
@@ -206,10 +206,13 @@ public class LinkedList<E> extends AbstractList<E> {
 
     @Override
     public int indexOf(E element) {
+        // if(isEmpty()){
+        //     return -1;
+        // }
 
         Node<E> current = this.first;
         int i = 0;
-        while (current.next != null) {
+        while (current != null) {
             if (current.element.equals(element)) {
                 return i;
             }
