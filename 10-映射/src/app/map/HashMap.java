@@ -47,15 +47,18 @@ public class HashMap<K, V> implements Map<K, V> {
 
     @Override
     public V put(K key, V value) {
+
+        resize();
+
         int index = index(key);
         Node<K, V> root = table[index];
         if (root == null) {
             // 表示没有根节点
-            Node<K, V> newNode = new Node<K, V>(key, value, null);
+            Node<K, V> newNode = createNode(key, value, null);
             root = newNode;
             table[index] = root;
             this.size++;
-            afterPut(newNode);
+            fixAfterPut(newNode);
             return null;
         }
 
@@ -99,9 +102,9 @@ public class HashMap<K, V> implements Map<K, V> {
             }
 
             if (compareResult > 0) {
-                node = node.left;
-            } else if (compareResult < 0) {
                 node = node.right;
+            } else if (compareResult < 0) {
+                node = node.left;
             } else {
                 V old = node.value;
                 node.key = key;
@@ -110,14 +113,14 @@ public class HashMap<K, V> implements Map<K, V> {
             }
 
         } while (node != null);
-        Node<K, V> newNode = new Node<K, V>(key, value, parent);
+        Node<K, V> newNode = createNode(key, value, parent);
         if (compareResult > 0) {
             parent.right = newNode;
         } else {
             parent.left = newNode;
         }
         this.size++;
-        afterPut(newNode);
+        fixAfterPut(newNode);
         return null;
     }
 
@@ -197,6 +200,14 @@ public class HashMap<K, V> implements Map<K, V> {
 
     }
 
+    protected Node<K, V> createNode(K key, V value, Node<K,V> parent) {
+       return new Node<K, V>(key, value, parent);
+    }
+
+    protected void afterRemove(Node<K, V> willRemove, Node<K, V> removeNode) {
+        
+    }
+
     private void resize() {
         if (size / this.table.length < DEFAULT_LOAD_FACTOR)
             return;
@@ -237,7 +248,7 @@ public class HashMap<K, V> implements Map<K, V> {
             // 表示没有根节点
             table[index] = newNode;
             this.size++;
-            afterPut(newNode);
+            fixAfterPut(newNode);
             return;
         }
 
@@ -268,9 +279,9 @@ public class HashMap<K, V> implements Map<K, V> {
             }
 
             if (compareResult > 0) {
-                node = node.left;
-            } else if (compareResult < 0) {
                 node = node.right;
+            } else if (compareResult < 0) {
+                node = node.left;
             }
 
         } while (node != null);
@@ -282,7 +293,7 @@ public class HashMap<K, V> implements Map<K, V> {
         }
         newNode.parent = parent;
         this.size++;
-        afterPut(newNode);
+        fixAfterPut(newNode);
 
     }
 
@@ -297,7 +308,7 @@ public class HashMap<K, V> implements Map<K, V> {
         return hashCode & (table.length - 1);
     }
 
-    private void afterPut(Node<K, V> node) {
+    private void fixAfterPut(Node<K, V> node) {
         Node<K, V> parent = node.parent;
         if (parent == null) {
             // 添加的是根节点，或者上溢到根节点
@@ -319,7 +330,7 @@ public class HashMap<K, V> implements Map<K, V> {
             black(uncle);
 
             red(grand);
-            afterPut(grand);
+            fixAfterPut(grand);
             return;
         } else {
             // uncel不是红色
@@ -397,47 +408,6 @@ public class HashMap<K, V> implements Map<K, V> {
 
     }
 
-    private void checkKeyNotNull(K key) {
-        if (key == null) {
-            throw new IllegalArgumentException("key must not be null.");
-        }
-    }
-
-    private int compare(K k1, K k2, int h1, int h2) {
-
-        // 比较哈希值
-        int result = h1 - h2;
-        if (result != 0) {
-            return result;
-        }
-
-        // 哈希值相等
-        // 比较equals
-        if (Objects.equals(k1, k2)) {
-            return 0;
-        }
-
-        // 哈希值相等，但不equals
-        // 比较类名
-        if (k1 != null && k2 != null) {
-            String k1Cls = k1.getClass().getName();
-            String k2Cls = k2.getClass().getName();
-            result = k1Cls.compareTo(k2Cls);
-            if (result != 0) {
-                return result;
-            }
-            // 同一种类型，并且具有比较性
-            if (k1 instanceof Comparable) {
-                return ((Comparable) k1).compareTo(k2);
-            }
-        }
-
-        // 同一种类型，但不具备比较性
-        // k1为空，k2不为空
-        // k2为空，k1不为空
-
-        return System.identityHashCode(k1) - System.identityHashCode(k2);
-    }
 
     private Node<K, V> color(Node<K, V> node, Boolean color) {
         if (node == null) {
@@ -509,6 +479,7 @@ public class HashMap<K, V> implements Map<K, V> {
         if (node == null) {
             return null;
         }
+        Node<K, V> willRemove = node;
         V oldValue = node.value;
         size--;
         if (node.hasTwoChildren()) {
@@ -535,12 +506,12 @@ public class HashMap<K, V> implements Map<K, V> {
                 // node == node.parent.right
                 node.parent.right = replacement;
             }
-            afterRemove(node, replacement);
+            fixAfterRemove(node, replacement);
         } else {
             if (node.parent == null) {
                 // 删除的是根节点
                 table[index(node)] = null;
-                afterRemove(node, null);
+                fixAfterRemove(node, null);
             } else {
                 // node 是叶子节点，但是不是root节点
                 if (node.parent.left == node) {
@@ -550,13 +521,15 @@ public class HashMap<K, V> implements Map<K, V> {
                     node.parent.right = null;
                 }
 
-                afterRemove(node, null);
+                fixAfterRemove(node, null);
             }
         }
+
+        afterRemove(willRemove, node);
         return oldValue;
     }
 
-    private void afterRemove(Node<K, V> node, Node<K, V> replacement) {
+    private void fixAfterRemove(Node<K, V> node, Node<K, V> replacement) {
         // 如果删除的节点是红色
         if (isRed(node)) {
             return;
@@ -597,7 +570,7 @@ public class HashMap<K, V> implements Map<K, V> {
                 black(parent);
                 red(sibling);
                 if (parentBlack) {
-                    afterRemove(parent, null);
+                    fixAfterRemove(parent, null);
                 }
 
             } else {
@@ -633,7 +606,7 @@ public class HashMap<K, V> implements Map<K, V> {
                 black(parent);
                 red(sibling);
                 if (parentBlack) {
-                    afterRemove(parent, null);
+                    fixAfterRemove(parent, null);
                 }
 
             } else {
@@ -695,7 +668,7 @@ public class HashMap<K, V> implements Map<K, V> {
     /**
      * Node<K,V>
      */
-    public static class Node<K, V> {
+    protected static class Node<K, V> {
         K key;
         V value;
         int hash;
