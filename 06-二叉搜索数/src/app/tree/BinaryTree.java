@@ -1,6 +1,7 @@
 package app.tree;
 
 import java.util.LinkedList;
+import java.util.Stack;
 
 import com.mj.printer.BinaryTreeInfo;
 
@@ -26,7 +27,7 @@ public class BinaryTree<E> implements BinaryTreeInfo {
 
     // 左序遍历
     public void preorderTraversal() {
-        preorder(this.root, new Visitor<E>() {
+        preorder2(this.root, new Visitor<E>() {
 
             @Override
             public boolean visit(E element) {
@@ -54,10 +55,34 @@ public class BinaryTree<E> implements BinaryTreeInfo {
         preorder(node.right, visitor);
     }
 
+    // 前序遍历非递归
+    public void preorder2(Node<E> node, Visitor<E> visitor) {
+        if (node == null || visitor.stop) {
+            return;
+        }
+
+        Stack<Node<E>> stack = new Stack<>();
+        while (true) {
+            if (visitor.visit(node.element)) {
+                return;
+            }
+            if (node.right != null) {
+                stack.push(node.right);
+            }
+            node = node.left;
+            if (node == null) {
+                if (stack.empty()) {
+                    return;
+                }
+                node = stack.pop();
+            }
+        }
+
+    }
+
     // 中序遍历
     public void inorderTraversal() {
-        inorder(this.root, new Visitor<E>() {
-
+        inorder2(this.root, new Visitor<E>() {
             @Override
             public boolean visit(E element) {
                 System.out.println(element);
@@ -73,6 +98,7 @@ public class BinaryTree<E> implements BinaryTreeInfo {
         inorder(this.root, vistor);
     }
 
+    // 中序遍历递归
     public void inorder(Node<E> node, Visitor<E> visitor) {
         if (node == null || visitor.stop) {
             return;
@@ -86,9 +112,29 @@ public class BinaryTree<E> implements BinaryTreeInfo {
         inorder(node.right, visitor);
     }
 
+    // 中序遍历父递归
+    public void inorder2(Node<E> node, Visitor<E> visitor) {
+        Stack<Node<E>> stack = new Stack<>();
+        while (true) {
+            if (node != null) {
+                stack.push(node);
+                node = node.left;
+
+            } else if (stack.empty()) {
+                return;
+            } else {
+                node = stack.pop();
+                if (visitor.visit(node.element)) {
+                    return;
+                }
+                node = node.right;
+            }
+        }
+    }
+
     // 后序遍历
     public void posorderTraversal() {
-        posorder(this.root, new Visitor<E>() {
+        posorder2(this.root, new Visitor<E>() {
 
             @Override
             public boolean visit(E element) {
@@ -116,6 +162,31 @@ public class BinaryTree<E> implements BinaryTreeInfo {
             return;
         }
         visitor.stop = visitor.visit(node.element);
+    }
+
+    // 后序遍历非递归
+    public void posorder2(Node<E> root, Visitor<E> visitor) {
+        Stack<Node<E>> stack = new Stack<>();
+        stack.push(root);
+        Node<E> prev= null;
+        while (!stack.isEmpty()) {
+            Node<E> top = stack.peek();
+            if (top.isLeaf()||(prev!=null&&prev.parent==top)) {
+                prev = stack.pop();
+                if (visitor.visit(prev.element)){
+                    return;
+                }
+
+            }else{
+                if(top.right!=null){
+                    stack.push(top.right);
+                }
+
+                if(top.left!=null){
+                    stack.push(top.left);
+                }
+            }
+        }
     }
 
     // 层序遍历
@@ -495,7 +566,7 @@ public class BinaryTree<E> implements BinaryTreeInfo {
 
     @Override
     public Object string(Object node) {
-        return node.toString();
+        return ((Node<E>) node).element.toString();
         // Node<E> p = ((Node<E>) node).parent;
         // return "p(" + (p != null ? p.element : "null") + ")_" + ((Node<E>)
         // node).element;

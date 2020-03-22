@@ -30,7 +30,7 @@ public class BSTTest {
         }
 
         BinaryTrees.println(tree);
-        tree.levelOrderTraversal();
+        tree.posorderTraversal();
     }
 
     public static void test2() {
